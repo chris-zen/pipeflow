@@ -1,4 +1,5 @@
-package pipeflow.core
+package pipeflow.dsl.requirements
+
 
 trait Requirement {
   // def children: Iterable[Requirement] = Iterable.empty
@@ -7,5 +8,7 @@ trait Requirement {
 //case class SomeOf(reqs: Iterable[Requirement], min: Int) extends Requirement
 //case class Weak(req: Requirement) extends Requirement
 
-case class NodeReq(node: Node) extends Requirement
-case class DataReq(dataRef: DataRef) extends Requirement
+
+
+
+
