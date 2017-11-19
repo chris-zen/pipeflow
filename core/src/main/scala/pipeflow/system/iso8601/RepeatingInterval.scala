@@ -55,6 +55,15 @@ object RepeatingInterval {
   }
 }
 
+/**
+  * Represents a subset of the ISO8601 repeating interval specification.
+  * @see [[https://en.wikipedia.org/wiki/ISO_8601#Repeating_intervals ISO_8601 Repeating intervals]]
+  *
+  * Specifically it only supports time intervals defined as `<start>/<duration>`.
+  *
+  * As an example, {{{RepeatingInterval("R5/2008-03-01T13:00Z/PT2H")}}}
+  * represents 5 repetitions starting at 2008-03-01 13:00 UTC that repeats every 2 hours.
+  */
 case class RepeatingInterval(
   recurrences: Long = RepeatingInterval.DefaultRecurrence,
   start: OffsetDateTime = RepeatingInterval.DefaultStart,

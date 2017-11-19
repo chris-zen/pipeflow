@@ -57,4 +57,11 @@ object IntervalDuration {
   }
 }
 
+/**
+  * Represents a duration in an ISO8601 representation for a repeating interval.
+  * @see [[https://en.wikipedia.org/wiki/ISO_8601#Durations ISO_8601 Durations]]
+  *
+  * As an example, {{{IntervalDuration("P3Y6M4DT12H30M5S")}}}
+  * represents a duration of "three years, six months, four days, twelve hours, thirty minutes, and five seconds"
+  */
 case class IntervalDuration(dateDuration: Period, timeDuration: Duration)
