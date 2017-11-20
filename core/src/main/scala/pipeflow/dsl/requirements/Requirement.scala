@@ -7,8 +7,3 @@ trait Requirement {
 
 //case class SomeOf(reqs: Iterable[Requirement], min: Int) extends Requirement
 //case class Weak(req: Requirement) extends Requirement
-
-
-
-
-

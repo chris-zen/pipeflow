@@ -13,7 +13,3 @@ object DataRef {
     def dataRef(from: T): DataRef
   }
 }
-
-
-
-
