@@ -3,25 +3,18 @@ package pipeflow.system.iso8601
 import java.time._
 
 import scala.util.{Failure, Success, Try}
+import cats.syntax.either._
+import cats.syntax.option._
 
 
 object RepeatingInterval {
-  class RepeatingIntervalFormatException(expression: String)
-    extends Exception(s"Wrong repeating interval expression: $expression")
-
-  class RepeatingIntervalRecurrenceException(expression: String, cause: Throwable)
-    extends Exception(s"Wrong recurrence expression while parsing the repeating interval: $expression", cause)
-
-  class RepeatingIntervalStartException(expression: String, cause: Throwable)
-    extends Exception(s"Wrong start expression while parsing the repeating interval: $expression", cause)
-
 
   protected val DefaultDuration: IntervalDuration = IntervalDuration()
 
   private val Regex = """R([0-9]*)/(.*)/(P.*)""".r
 
 
-  def apply(expression: String): Try[RepeatingInterval] = {
+  def apply(expression: String): Either[String, RepeatingInterval] = {
     expression match {
       case Regex(recurrencesExpr, startExpr, intervalExpr) =>
         for {
@@ -30,25 +23,24 @@ object RepeatingInterval {
           intervalDuration <- IntervalDuration(intervalExpr)
         } yield new RepeatingInterval(recurrences, start, intervalDuration)
 
-      case _ => Failure(new RepeatingIntervalFormatException(expression))
+      case _ => s"Wrong format for the repeating interval '$expression'".asLeft
     }
   }
 
-  private def parseRecurrences(expression: String, recExpr: String): Try[Option[Long]] = {
+  private def parseRecurrences(expression: String, recExpr: String): Either[String, Option[Long]] = {
     if (recExpr.isEmpty)
-      Success(None)
+      none.asRight
     else
-      Try(Some(recExpr.toLong)).recoverWith {
-        case cause => Failure(new RepeatingIntervalRecurrenceException(expression, cause))
-      }
+      recExpr.toLong.some.asRight
   }
 
-  private def parseStart(expression: String, startExpr: String): Try[Option[OffsetDateTime]] = {
+  private def parseStart(expression: String, startExpr: String): Either[String, Option[OffsetDateTime]] = {
     if (startExpr.isEmpty)
-      Success(None)
+      none.asRight
     else
-      Try(Some(OffsetDateTime.parse(startExpr))).recoverWith {
-        case cause => Failure(new RepeatingIntervalStartException(expression, cause))
+      Try(OffsetDateTime.parse(startExpr)) match {
+        case Success(start) => start.some.asRight
+        case Failure(cause) => s"Wrong format for the start part '$startExpr'".asLeft
       }
   }
 }

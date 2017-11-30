@@ -17,19 +17,21 @@ object PipeFlowSystem {
 
   private val logger = LoggerFactory.getLogger(PipeFlowSystem.getClass.getName.split("[.$]").last)
 
+  private class ScheduleRepeatingIntervalException(msg: String) extends Exception(msg)
+
   def apply(name: String): PipeFlowSystem = new PipeFlowSystem(name, ConfigFactory.load())
 }
 
 class PipeFlowSystem(val name: String, val config: Config) {
 
-  import PipeFlowSystem.{logger, NodeBuilder}
+  import PipeFlowSystem.{logger, NodeBuilder, ScheduleRepeatingIntervalException}
 
   val system = ActorSystem(name, config)
 
   def schedule(iso8601RepeatingInterval: String)(nodeBuilder: NodeBuilder): Unit = {
     RepeatingInterval(iso8601RepeatingInterval) match {
-      case Success(repeatingInterval) => schedule(repeatingInterval)(nodeBuilder)
-      case Failure(exception) => throw exception
+      case Right(repeatingInterval) => schedule(repeatingInterval)(nodeBuilder)
+      case Left(msg) => throw new ScheduleRepeatingIntervalException(msg)
     }
   }
 

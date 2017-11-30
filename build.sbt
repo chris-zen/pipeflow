@@ -15,7 +15,9 @@ lazy val defaultSettings = Defaults.coreDefaultSettings ++ Seq(
   libraryDependencies ++= Seq(
     "com.typesafe" % "config" % "1.3.2",
     "org.slf4j" % "slf4j-log4j12" % "1.7.25",
-    "org.scalatest" %% "scalatest" % "3.0.4" % "test"
+    "org.typelevel" %% "cats-core" % "1.0.0-RC1",
+    "org.scalatest" %% "scalatest" % "3.0.4" % "test",
+    "org.mockito" % "mockito-core" % "2.12.0" % "test"
   )
 )
 

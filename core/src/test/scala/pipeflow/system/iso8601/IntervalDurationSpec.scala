@@ -4,7 +4,8 @@ import java.time.{Duration, Period}
 
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.util.Success
+import cats.syntax.either._
+
 
 class IntervalDurationSpec extends FlatSpec with Matchers {
 
@@ -17,13 +18,31 @@ class IntervalDurationSpec extends FlatSpec with Matchers {
     intervalDuration.timeDuration shouldBe Duration.parse("PT4H5M6S")
   }
 
+  it should "use the dateDuration for years, months and days, and the timeDuration for hours, minutes and seconds" in {
+    val intervalDuration = IntervalDuration("P1Y2M3DT4H5M6S").right.get
+
+    intervalDuration.dateDuration shouldBe Period.of(1, 2, 3)
+    intervalDuration.timeDuration shouldBe Duration.parse("PT4H5M6S")
+  }
+
   it should "parse P0D" in {
-    val expectedInterval = IntervalDuration()
-    IntervalDuration("P0D") shouldBe Success(expectedInterval)
+    IntervalDuration("P0D") shouldBe IntervalDuration.Zero.asRight
   }
 
   it should "parse PT1M" in {
     val expectedInterval = IntervalDuration(minutes = 1)
-    IntervalDuration("PT1M") shouldBe Success(expectedInterval)
+    IntervalDuration("PT1M") shouldBe expectedInterval.asRight
+  }
+
+  it should "fail to parse P" in {
+    IntervalDuration("P").isLeft shouldBe true
+  }
+
+  it should "fail to parse PT" in {
+    IntervalDuration("PT").isLeft shouldBe true
+  }
+
+  it should "fail to parse an empty string" in {
+    IntervalDuration("").isLeft shouldBe true
   }
 }

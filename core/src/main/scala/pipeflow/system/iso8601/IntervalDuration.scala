@@ -3,20 +3,15 @@ package pipeflow.system.iso8601
 import java.time.{Duration, Period}
 
 import scala.util.{Failure, Success, Try}
+import cats.syntax.either._
+import cats.syntax.option._
 
 
 object IntervalDuration {
 
-  class IntervalDurationParsingException(expression: String, cause: Throwable)
-    extends Exception(s"Wrong interval duration expression: $expression", cause)
-
-  class IntervalDurationFormatException(expression: String)
-    extends Exception(s"Wrong interval duration expression: $expression")
-
   private val Regex = """(P.*?)(T.*)?""".r
 
-  protected val DefaultDateDuration: Period = Period.ZERO
-  protected val DefaultTimeDuration: Duration = Duration.ZERO
+  val Zero = IntervalDuration(Period.ZERO, Duration.ZERO)
 
 
   def apply(years: Int = 0, months: Int = 0, days: Int = 0,
@@ -26,34 +21,49 @@ object IntervalDuration {
     new IntervalDuration(dateDuration, timeDuration)
   }
 
-  def apply(expression: String): Try[IntervalDuration] = {
+  def apply(expression: String): Either[String, IntervalDuration] = {
     expression match {
       case Regex(dateDurationExpr, timeDurationExpr) =>
         for {
-          dateDuration <- parseDateDuration(expression, dateDurationExpr)
-          timeDuration <- parseTimeDuration(expression, timeDurationExpr)
-        } yield new IntervalDuration(dateDuration, timeDuration)
+          dateDuration     <- parseDateDuration(expression, dateDurationExpr)
+          timeDuration     <- parseTimeDuration(expression, timeDurationExpr)
+          intervalDuration <- buildIntervalDuration(expression, dateDuration, timeDuration)
+        } yield intervalDuration
 
-      case _ => Failure(new IntervalDurationFormatException(expression))
+      case _ => s"Wrong interval duration expression: $expression".asLeft
     }
   }
 
-  private def parseDateDuration(expression: String, durationExpr: String): Try[Period] = {
+  private def parseDateDuration(expression: String, durationExpr: String): Either[String, Option[Period]] = {
     if (durationExpr.equalsIgnoreCase("P"))
-      Success(DefaultDateDuration)
+      none.asRight
     else
-      Try(Period.parse(durationExpr)).recoverWith {
-        case cause => Failure(new IntervalDurationParsingException(expression, cause))
+      Try(Period.parse(durationExpr)) match {
+        case Success(period) => period.some.asRight
+        case Failure(cause) => s"Error parsing the expression '$expression': ${cause.getMessage}".asLeft
       }
   }
 
-  private def parseTimeDuration(expression: String, durationExpr: String): Try[Duration] = {
-    Option(durationExpr) match {
-      case Some(_) => Try(Duration.parse(s"P$durationExpr")).recoverWith {
-        case cause => Failure(new IntervalDurationParsingException(expression, cause))
-      }
-      case None => Success(DefaultTimeDuration)
-    }
+  private def parseTimeDuration(expression: String, durationExprOrNull: String): Either[String, Option[Duration]] = {
+    Option(durationExprOrNull).map { expr =>
+        Try(Duration.parse(s"P$expr")) match {
+          case Success(duration) => duration.some.asRight
+          case Failure(cause) => s"Error parsing the expression 'P$expr' into a Duration: ${cause.getMessage}".asLeft
+        }
+    }.getOrElse(none.asRight)
+  }
+
+  private def buildIntervalDuration(expression: String,
+                                    dateDuration: Option[Period],
+                                    timeDuration: Option[Duration]): Either[String, IntervalDuration] = {
+
+    if (dateDuration.isEmpty && timeDuration.isEmpty)
+      s"Wrong interval duration expression '$expression'".asLeft
+    else
+      new IntervalDuration(
+        dateDuration.getOrElse(Period.ZERO),
+        timeDuration.getOrElse(Duration.ZERO)
+      ).asRight
   }
 }
 
