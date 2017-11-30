@@ -24,12 +24,10 @@ class PipeFlowSystem(val name: String, val config: Config) {
 
   import PipeFlowSystem.{logger, NodeBuilder}
 
-  case class Schedule(interval: RepeatingInterval, nodeBuilder: NodeBuilder)
-
   val system = ActorSystem(name, config)
 
-  def schedule(iso8601Expression: String)(nodeBuilder: NodeBuilder): Unit = {
-    RepeatingInterval(iso8601Expression) match {
+  def schedule(iso8601RepeatingInterval: String)(nodeBuilder: NodeBuilder): Unit = {
+    RepeatingInterval(iso8601RepeatingInterval) match {
       case Success(repeatingInterval) => schedule(repeatingInterval)(nodeBuilder)
       case Failure(exception) => throw exception
     }

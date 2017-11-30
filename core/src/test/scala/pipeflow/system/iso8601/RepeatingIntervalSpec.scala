@@ -14,7 +14,7 @@ class RepeatingIntervalSpec extends FlatSpec with Matchers {
   }
 
   it should "parse R52//P0D" in {
-    val expectedInterval = RepeatingInterval(recurrences = 52)
+    val expectedInterval = RepeatingInterval(recurrences = Some(52L))
     RepeatingInterval("R52//P0D") shouldBe Success(expectedInterval)
   }
 
@@ -25,7 +25,7 @@ class RepeatingIntervalSpec extends FlatSpec with Matchers {
 
   it should "parse R/2017-12-30T11:45+10:00/P1D" in {
     val expectedInterval = RepeatingInterval(
-      start = OffsetDateTime.parse("2017-12-30T11:45+10:00"),
+      start = Some(OffsetDateTime.parse("2017-12-30T11:45+10:00")),
       duration = IntervalDuration(days = 1))
     RepeatingInterval("R/2017-12-30T11:45+10:00/P1D") shouldBe Success(expectedInterval)
   }

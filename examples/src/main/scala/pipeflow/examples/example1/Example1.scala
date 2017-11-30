@@ -13,11 +13,11 @@ import pipeflow.system.PipeFlowSystem
 /**
   * Hierarchy:
   *
-  * preprocessing-2017-11-18T00:10:20
-  * +- cleaning-2017-11-18T00:10:20
-  * |  +- cleaning-it-2017-11-18T00:10:20
-  * |  +- cleaning-fr-2017-11-18T00:10:20
-  * +- aggregation-2017-11-18T00:10:20
+  * preprocessing-2017-11-18T00:10
+  * +- cleaning-2017-11-18T00:10
+  * |  +- cleaning-it-2017-11-18T00:10
+  * |  +- cleaning-fr-2017-11-18T00:10
+  * +- aggregation-2017-11-18T00:10
   *
   * Topological order:
   *
@@ -26,7 +26,7 @@ import pipeflow.system.PipeFlowSystem
   */
 object Example1 extends App {
 
-  val logger = LoggerFactory.getLogger(this.getClass.getName.split("[.$]").last)
+  private val logger = LoggerFactory.getLogger(this.getClass.getName.split("[.$]").last)
 
   val Countries = Seq("it", "fr")
 
@@ -34,7 +34,7 @@ object Example1 extends App {
 
   val system = PipeFlowSystem("example1")
 
-  system.schedule("R//PT1H") { dateTime =>
+  system.schedule("R/T00:30Z/PT1H") { dateTime =>
     buildPreprocessing(dateTime, Countries)
   }
 

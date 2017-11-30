@@ -16,8 +16,6 @@ object RepeatingInterval {
     extends Exception(s"Wrong start expression while parsing the repeating interval: $expression", cause)
 
 
-  protected val DefaultRecurrence: Long = 0L
-  protected val DefaultStart: OffsetDateTime = LocalDateTime.MIN.atOffset(ZoneOffset.UTC)
   protected val DefaultDuration: IntervalDuration = IntervalDuration()
 
   private val Regex = """R([0-9]*)/(.*)/(P.*)""".r
@@ -36,20 +34,20 @@ object RepeatingInterval {
     }
   }
 
-  private def parseRecurrences(expression: String, recExpr: String): Try[Long] = {
+  private def parseRecurrences(expression: String, recExpr: String): Try[Option[Long]] = {
     if (recExpr.isEmpty)
-      Success(DefaultRecurrence)
+      Success(None)
     else
-      Try(recExpr.toLong).recoverWith {
+      Try(Some(recExpr.toLong)).recoverWith {
         case cause => Failure(new RepeatingIntervalRecurrenceException(expression, cause))
       }
   }
 
-  private def parseStart(expression: String, startExpr: String): Try[OffsetDateTime] = {
+  private def parseStart(expression: String, startExpr: String): Try[Option[OffsetDateTime]] = {
     if (startExpr.isEmpty)
-      Success(DefaultStart)
+      Success(None)
     else
-      Try(OffsetDateTime.parse(startExpr)).recoverWith {
+      Try(Some(OffsetDateTime.parse(startExpr))).recoverWith {
         case cause => Failure(new RepeatingIntervalStartException(expression, cause))
       }
   }
@@ -65,6 +63,6 @@ object RepeatingInterval {
   * represents 5 repetitions starting at 2008-03-01 13:00 UTC that repeats every 2 hours.
   */
 case class RepeatingInterval(
-  recurrences: Long = RepeatingInterval.DefaultRecurrence,
-  start: OffsetDateTime = RepeatingInterval.DefaultStart,
+  recurrences: Option[Long] = None,
+  start: Option[OffsetDateTime] = None,
   duration: IntervalDuration = RepeatingInterval.DefaultDuration)
