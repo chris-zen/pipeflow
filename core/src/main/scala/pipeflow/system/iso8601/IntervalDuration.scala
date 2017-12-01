@@ -38,18 +38,16 @@ object IntervalDuration {
     if (durationExpr.equalsIgnoreCase("P"))
       none.asRight
     else
-      Try(Period.parse(durationExpr)) match {
-        case Success(period) => period.some.asRight
-        case Failure(cause) => s"Error parsing the expression '$expression': ${cause.getMessage}".asLeft
-      }
+      Either.catchNonFatal(Period.parse(durationExpr))
+        .map(duration => duration.some)
+        .leftMap(cause => s"Error parsing the expression '$expression': ${cause.getMessage}")
   }
 
   private def parseTimeDuration(expression: String, durationExprOrNull: String): Either[String, Option[Duration]] = {
     Option(durationExprOrNull).map { expr =>
-        Try(Duration.parse(s"P$expr")) match {
-          case Success(duration) => duration.some.asRight
-          case Failure(cause) => s"Error parsing the expression 'P$expr' into a Duration: ${cause.getMessage}".asLeft
-        }
+      Either.catchNonFatal(Duration.parse(s"P$expr"))
+        .map(duration => duration.some)
+        .leftMap(cause => s"Error parsing the expression 'P$expr' into a Duration: ${cause.getMessage}")
     }.getOrElse(none.asRight)
   }
 

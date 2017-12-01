@@ -38,10 +38,9 @@ object RepeatingInterval {
     if (startExpr.isEmpty)
       none.asRight
     else
-      Try(OffsetDateTime.parse(startExpr)) match {
-        case Success(start) => start.some.asRight
-        case Failure(cause) => s"Wrong format for the start part '$startExpr'".asLeft
-      }
+      Either.catchNonFatal(OffsetDateTime.parse(startExpr))
+        .map(start => start.some)
+        .leftMap(cause => s"Wrong format for the start part '$startExpr': ${cause.getMessage}")
   }
 }
 
