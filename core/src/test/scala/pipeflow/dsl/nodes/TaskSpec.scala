@@ -5,6 +5,7 @@ import pipeflow.dsl.datarefs.Uri._
 import pipeflow.dsl.datarefs.Uri
 import pipeflow.dsl.actions.{Action, Closure}
 import pipeflow.dsl.requirements.{DataRefRequirement, NodeRequirement}
+import pipeflow.dsl.requirements.NodeRequirement._
 import pipeflow.dsl.nodes.TaskSpec.DummyAction
 
 class TaskSpec extends FlatSpec with Matchers {
@@ -19,27 +20,27 @@ class TaskSpec extends FlatSpec with Matchers {
 
   it should "build with a required node" in {
     val node = Task("req")
-    Task("id").requires(node).requires shouldBe Seq(NodeRequirement(node))
+    Task("id").requires(node).requirements shouldBe Seq(NodeRequirement(node))
   }
 
   it should "build with a requirement" in {
     val node = Task("req")
-    Task("id").requires(NodeRequirement(node)).requires shouldBe Seq(NodeRequirement(node))
+    Task("id").requires(NodeRequirement(node)).requirements shouldBe Seq(NodeRequirement(node))
   }
 
   it should "build with requirements" in {
-    val requirements = Seq(Task("req1"), Task("req2")).map(NodeRequirement)
-    Task("id").requires(requirements).requires shouldBe requirements
+    val requirements = Seq(Task("req1"), Task("req2")).map(NodeRequirement.apply)
+    Task("id").requires(requirements).requirements shouldBe requirements
   }
 
   it should "build with an input" in {
     val ref = "uri"
-    Task("id").input(ref).requires shouldBe Seq(DataRefRequirement(ref))
+    Task("id").input(ref).requirements shouldBe Seq(DataRefRequirement(ref))
   }
 
   it should "build with inputs" in {
     val refs = Seq("uri1", "uri2")
-    Task("id").inputs(refs).requires shouldBe refs.map(ref => DataRefRequirement(ref))
+    Task("id").inputs(refs).requirements shouldBe refs.map(ref => DataRefRequirement(ref))
   }
 
   it should "provide only inputs" in {

@@ -9,7 +9,7 @@ class GroupSpec extends FlatSpec with Matchers {
 
   "A Group" should "build with a requirement" in {
     val node = Task("req")
-    Group("id").requires(NodeRequirement(node)).requires shouldBe Seq(NodeRequirement(node))
+    Group("id").requires(NodeRequirement(node)).requirements shouldBe Seq(NodeRequirement(node))
   }
 
   it should "build with name" in {
@@ -17,8 +17,8 @@ class GroupSpec extends FlatSpec with Matchers {
   }
 
   it should "build with requirements" in {
-    val requirements = Seq(Task("req1"), Task("req2")).map(NodeRequirement)
-    Group("id").requires(requirements).requires shouldBe requirements
+    val requirements = Seq(Task("req1"), Task("req2")).map(NodeRequirement.apply)
+    Group("id").requires(requirements).requirements shouldBe requirements
   }
 
   it should "build with a group" in {

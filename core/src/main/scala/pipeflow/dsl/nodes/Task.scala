@@ -2,7 +2,7 @@ package pipeflow.dsl.nodes
 
 import pipeflow.dsl.actions.Action
 import pipeflow.dsl.datarefs.DataRef
-import pipeflow.dsl.requirements.{DataRefRequirement, NodeRequirement, Requirement}
+import pipeflow.dsl.requirements.{DataRefRequirement, Requirement}
 
 object Task {
   def apply(id: String): Task = new Task(id)
@@ -11,7 +11,7 @@ object Task {
 case class Task private (
   id: String,
   name: Option[String] = None,
-  requires: Seq[Requirement] = Seq.empty,
+  requirements: Seq[Requirement] = Seq.empty,
   outputs: Seq[DataRef] = Seq.empty,
   action: Option[Action] = None
 ) extends Node {
@@ -20,17 +20,25 @@ case class Task private (
 
   def name(name: String): Task = this.copy(name = Some(name))
 
-  def requires(node: Node): Task = this.copy(requires = requires :+ NodeRequirement(node))
-  def requires(requirement: Requirement): Task = this.copy(requires = requires :+ requirement)
-  def requires(requirements: Seq[Requirement]): Task = this.copy(requires = requires ++ requirements)
+  def requires(requirement: Requirement): Task =
+    this.copy(requirements = requirements :+ requirement)
+
+  def requires(reqs: Seq[Requirement]): Task =
+    this.copy(requirements = requirements ++ reqs)
+
+  def requires[T](requirement: T)(implicit evidence: Requirement.Evidence[T]): Task =
+    this.copy(requirements = requirements :+ evidence.requirement(requirement))
+
+  def requires[T](reqs: Seq[T])(implicit evidence: Requirement.Evidence[T]): Task =
+    this.copy(requirements = requirements ++ reqs.map(evidence.requirement))
 
   def input[T](ref: T)(implicit evidence: DataRef.Evidence[T]): Task =
-    this.copy(requires = requires :+ DataRefRequirement(evidence.dataRef(ref)))
+    this.copy(requirements = requirements :+ DataRefRequirement(evidence.dataRef(ref)))
 
   def inputs[T](refs: Seq[T])(implicit evidence: DataRef.Evidence[T]): Task =
-    this.copy(requires = requires ++ refs.map(ref => DataRefRequirement(evidence.dataRef(ref))))
+    this.copy(requirements = requirements ++ refs.map(ref => DataRefRequirement(evidence.dataRef(ref))))
 
-  def inputs: Seq[DataRef] = requires.flatMap(_ match {
+  def inputs: Seq[DataRef] = requirements.flatMap(_ match {
     case DataRefRequirement(dataRef) => Some(dataRef)
     case _ => None
   })

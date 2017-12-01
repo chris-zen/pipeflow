@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter
 import org.slf4j.LoggerFactory
 import pipeflow.dsl.actions.Closure._
 import pipeflow.dsl.datarefs.Uri._
+import pipeflow.dsl.requirements.NodeRequirement._
 import pipeflow.dsl.nodes.{Group, Node, Task}
 import pipeflow.system.PipeFlowSystem
 
@@ -73,7 +74,7 @@ object Example1 extends App {
     Group(s"cleaning-${dateTime.asId}").withTasks {
       for (country <- countries)
         yield Task(s"cleaning-$country-${dateTime.asId}")
-          .name(s"Cleaning of source data for country $country")
+          .name(s"Cleaning source data for country $country")
           .input(s"s3://data/source/$country/$dateTimePath")
           .output(s"s3://data/clean/$country/$dateTimePath")
           .action { () =>

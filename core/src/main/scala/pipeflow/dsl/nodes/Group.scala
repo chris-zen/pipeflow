@@ -9,14 +9,23 @@ object Group {
 case class Group private (
   id: String,
   name: Option[String] = None,
-  requires: Seq[Requirement] = Seq.empty,
+  requirements: Seq[Requirement] = Seq.empty,
   children: Seq[Node] = Seq.empty
 ) extends Node {
 
   def name(name: String): Group = this.copy(name = Some(name))
 
-  def requires(requirement: Requirement): Group = this.copy(requires = requires :+ requirement)
-  def requires(requirements: Seq[Requirement]): Group = this.copy(requires = requires ++ requirements)
+  def requires(requirement: Requirement): Group =
+    this.copy(requirements = requirements :+ requirement)
+
+  def requires(reqs: Seq[Requirement]): Group =
+    this.copy(requirements = requirements ++ reqs)
+
+  def requires[T](requirement: T)(implicit evidence: Requirement.Evidence[T]): Group =
+    this.copy(requirements = requirements :+ evidence.requirement(requirement))
+
+  def requires[T](reqs: Seq[T])(implicit evidence: Requirement.Evidence[T]): Group =
+    this.copy(requirements = requirements ++ reqs.map(evidence.requirement))
 
   def withGroup(group: Group): Group = this.copy(children = children :+ group)
   def withGroups(groups: Seq[Group]): Group = this.copy(children = children ++ groups)
