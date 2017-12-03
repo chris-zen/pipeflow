@@ -15,8 +15,8 @@ import pipeflow.system.actors.PeriodicSchedulerActor.{NodeCreated, Tick}
 import pipeflow.system.iso8601.{IntervalDuration, RepeatingInterval}
 
 
-class PeriodicSchedulerActorSpec extends TestKit(ActorSystem("SchedulerActorSpec"))
-  with WordSpecLike with Matchers with BeforeAndAfterAll with ScheduleActorFixtures {
+class PeriodicSchedulerActorSpec extends TestKit(ActorSystem("PeriodicSchedulerActorSpec"))
+  with WordSpecLike with Matchers with BeforeAndAfterAll with PeriodicSchedulerActorFixtures {
 
   override def afterAll {
     TestKit.shutdownActorSystem(system)
@@ -132,7 +132,7 @@ class PeriodicSchedulerActorSpec extends TestKit(ActorSystem("SchedulerActorSpec
   }
 }
 
-trait ScheduleActorFixtures extends MockitoSugar {
+trait PeriodicSchedulerActorFixtures extends MockitoSugar {
 
   trait Hook {
     def scheduleTick(recurrences: Option[Long],
@@ -146,11 +146,11 @@ trait ScheduleActorFixtures extends MockitoSugar {
 
     import ExecutionContext.Implicits.global
 
+    def nodeBuilder(dateTime: LocalDateTime): Node = { Task("task") }
+
     val hook = mock[Hook]
 
     val taskSchedulerProbe = TestProbe()
-
-    def nodeBuilder(dateTime: LocalDateTime): Node = { Task("task") }
 
     val actor = TestActorRef(new PeriodicSchedulerActor(taskSchedulerProbe.ref, repeatingInterval, nodeBuilder) {
       override protected def scheduleTick(recurrences: Option[Long],
@@ -158,6 +158,7 @@ trait ScheduleActorFixtures extends MockitoSugar {
                                           minimumTickDuration: FiniteDuration): Cancellable =
         hook.scheduleTick(recurrences, nextDateTime, minimumTickDuration)
     })
+
     testBlock(hook, taskSchedulerProbe, actor)
   }
 
@@ -190,5 +191,4 @@ trait ScheduleActorFixtures extends MockitoSugar {
       this
     }
   }
-
 }
