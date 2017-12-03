@@ -1,17 +1,24 @@
-package pipeflow.core
+package pipeflow.dsl.nodes
 
 import org.scalatest.{FlatSpec, Matchers}
+
+import pipeflow.dsl.requirements.NodeRequirement
+
 
 class GroupSpec extends FlatSpec with Matchers {
 
   "A Group" should "build with a requirement" in {
     val node = Task("req")
-    Task("id").requires(NodeReq(node)).requires shouldBe Seq(NodeReq(node))
+    Group("id").requires(NodeRequirement(node)).requirements shouldBe Seq(NodeRequirement(node))
+  }
+
+  it should "build with name" in {
+    Group("id").name("name").name shouldBe Some("name")
   }
 
   it should "build with requirements" in {
-    val requirements = Seq(Task("req1"), Task("req2")).map(NodeReq)
-    Task("id").requires(requirements).requires shouldBe requirements
+    val requirements = Seq(Task("req1"), Task("req2")).map(NodeRequirement.apply)
+    Group("id").requires(requirements).requirements shouldBe requirements
   }
 
   it should "build with a group" in {
