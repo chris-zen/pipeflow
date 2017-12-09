@@ -72,4 +72,10 @@ object IntervalDuration {
   * As an example, {{{IntervalDuration("P3Y6M4DT12H30M5S")}}}
   * represents a duration of "three years, six months, four days, twelve hours, thirty minutes, and five seconds"
   */
-case class IntervalDuration(dateDuration: Period, timeDuration: Duration)
+case class IntervalDuration(dateDuration: Period, timeDuration: Duration) {
+  override def toString: String = {
+    val datePart = if (dateDuration.isZero) "P" else dateDuration.toString
+    val timePart = if (timeDuration.isZero) "" else timeDuration.toString.substring(1)
+    s"$datePart$timePart"
+  }
+}

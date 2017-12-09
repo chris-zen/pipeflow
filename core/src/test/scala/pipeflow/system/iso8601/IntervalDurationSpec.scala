@@ -45,4 +45,11 @@ class IntervalDurationSpec extends FlatSpec with Matchers {
   it should "fail to parse an empty string" in {
     IntervalDuration("").isLeft shouldBe true
   }
+
+  it should "convert to string" in {
+    val cases = Seq("PT1H", "P1D", "P1DT1H")
+    val expected = cases.map(Right(_))
+
+    cases.map(IntervalDuration(_).map(_.toString)) shouldBe expected
+  }
 }
