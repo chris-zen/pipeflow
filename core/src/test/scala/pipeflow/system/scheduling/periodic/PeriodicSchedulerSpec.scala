@@ -1,21 +1,22 @@
-package pipeflow.system.actors
+package pipeflow.system.scheduling.periodic
 
 import java.time._
 
 import akka.actor.{ActorSystem, Cancellable}
 import akka.testkit.{TestActorRef, TestKit, TestProbe}
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{DurationDouble, FiniteDuration}
 import org.mockito.Mockito.{verify, verifyNoMoreInteractions}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-
 import pipeflow.dsl.nodes.{Node, Task}
-import pipeflow.system.actors.PeriodicSchedulerActor.{NodeCreated, Tick}
 import pipeflow.system.iso8601.{IntervalDuration, RepeatingInterval}
+import pipeflow.system.scheduling.periodic.PeriodicScheduler.Tick
+import pipeflow.system.scheduling.tasks.TaskScheduler.NodeCreated
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.{DurationDouble, FiniteDuration}
 
 
-class PeriodicSchedulerActorSpec extends TestKit(ActorSystem("PeriodicSchedulerActorSpec"))
+class PeriodicSchedulerSpec extends TestKit(ActorSystem("PeriodicSchedulerSpec"))
   with WordSpecLike with Matchers with BeforeAndAfterAll with PeriodicSchedulerActorFixtures {
 
   override def afterAll {
@@ -141,7 +142,7 @@ trait PeriodicSchedulerActorFixtures extends MockitoSugar {
   }
 
   def withScheduleActor(repeatingInterval: RepeatingInterval)(
-                        testBlock: (Hook, TestProbe, TestActorRef[PeriodicSchedulerActor]) => Any)(
+                        testBlock: (Hook, TestProbe, TestActorRef[PeriodicScheduler]) => Any)(
                         implicit clock: Clock, actorSystem: ActorSystem) = {
 
     import ExecutionContext.Implicits.global
@@ -152,7 +153,7 @@ trait PeriodicSchedulerActorFixtures extends MockitoSugar {
 
     val taskSchedulerProbe = TestProbe()
 
-    val actor = TestActorRef(new PeriodicSchedulerActor(taskSchedulerProbe.ref, repeatingInterval, nodeBuilder) {
+    val actor = TestActorRef(new PeriodicScheduler(taskSchedulerProbe.ref, repeatingInterval, nodeBuilder) {
       override protected def scheduleTick(recurrences: Option[Long],
                                           nextDateTime: OffsetDateTime,
                                           minimumTickDuration: FiniteDuration): Cancellable =

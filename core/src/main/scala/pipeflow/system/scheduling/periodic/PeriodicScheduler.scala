@@ -1,4 +1,4 @@
-package pipeflow.system.actors
+package pipeflow.system.scheduling.periodic
 
 import java.time.{Clock, OffsetDateTime}
 import java.util.concurrent.TimeUnit
@@ -6,31 +6,29 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{Actor, ActorRef, PoisonPill, Props}
 import akka.event.LoggingReceive
 import akka.pattern.pipe
-import pipeflow.dsl.nodes.Node
-import pipeflow.system.PipeFlowSystem.NodeBuilder
+import pipeflow.system.PipeFlowSystem.ScheduleNodeBuilder
 import pipeflow.system.iso8601.{IntervalDuration, RepeatingInterval}
+import pipeflow.system.scheduling.tasks.TaskScheduler.NodeCreated
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 
-object PeriodicSchedulerActor {
+object PeriodicScheduler {
 
   case class Tick(recurrences: Option[Long], scheduledDateTime: OffsetDateTime)
 
-  case class NodeCreated(node: Node)
-
-  def props(taskSchedulerRef: ActorRef, repeatingInterval: RepeatingInterval, nodeBuilder: NodeBuilder)(
+  def props(taskSchedulerRef: ActorRef, repeatingInterval: RepeatingInterval, nodeBuilder: ScheduleNodeBuilder)(
             implicit clock: Clock, executionContext: ExecutionContext): Props =
-    Props(new PeriodicSchedulerActor(taskSchedulerRef, repeatingInterval, nodeBuilder))
+    Props(new PeriodicScheduler(taskSchedulerRef, repeatingInterval, nodeBuilder))
 }
 
-class PeriodicSchedulerActor(taskSchedulerRef: ActorRef,
-                             repeatingInterval: RepeatingInterval,
-                             nodeBuilder: NodeBuilder)(
+class PeriodicScheduler(taskSchedulerRef: ActorRef,
+                        repeatingInterval: RepeatingInterval,
+                        nodeBuilder: ScheduleNodeBuilder)(
                              implicit clock: Clock,
                              executionContext: ExecutionContext) extends Actor {
 
-  import PeriodicSchedulerActor.{NodeCreated, Tick}
+  import PeriodicScheduler.Tick
 
   override def preStart(): Unit = {
     if (repeatingInterval.recurrences.forall(_ > 0)) {
@@ -46,6 +44,7 @@ class PeriodicSchedulerActor(taskSchedulerRef: ActorRef,
 
   def receive = LoggingReceive {
     case Tick(recurrences, scheduledDateTime) =>
+      // TODO handle failures
       Future {
         val node = nodeBuilder(scheduledDateTime.toLocalDateTime)
         NodeCreated(node)
