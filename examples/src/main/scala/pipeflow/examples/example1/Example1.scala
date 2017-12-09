@@ -45,8 +45,8 @@ object Example1 extends App {
     system.shutdown()
   }
 
-  system.schedule("R3/00:00Z/PT10S") { dateTime =>
-    buildPreprocessing(dateTime, Countries)
+  system.schedule("R/00:30Z/PT1H") { scheduledTime =>
+    buildPreprocessing(scheduledTime, Countries)
   }
 
   system.awaitTermination()
