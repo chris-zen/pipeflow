@@ -1,6 +1,6 @@
 package pipeflow.examples.example1
 
-import java.time.LocalDateTime
+import java.time.{Clock, LocalDateTime}
 import java.time.format.DateTimeFormatter
 
 import org.slf4j.LoggerFactory
@@ -9,6 +9,7 @@ import pipeflow.dsl.datarefs.Uri._
 import pipeflow.dsl.requirements.NodeRequirement._
 import pipeflow.dsl.nodes.{Group, Node, Task}
 import pipeflow.system.PipeFlowSystem
+import pipeflow.system.PipeFlowSystem.logger
 
 
 /**
@@ -29,13 +30,22 @@ object Example1 extends App {
 
   private val logger = LoggerFactory.getLogger(this.getClass.getName.split("[.$]").last)
 
+  private implicit val clock: Clock = Clock.systemUTC()
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   val Countries = Seq("it", "fr")
 
   logger.info("Starting pipeline ...")
 
   val system = PipeFlowSystem("example1")
 
-  system.schedule("R/T00:30Z/PT1H") { dateTime =>
+  scala.sys.addShutdownHook {
+    logger.info("Process shutdown")
+    system.shutdown()
+  }
+
+  system.schedule("R3/00:00Z/PT10S") { dateTime =>
     buildPreprocessing(dateTime, Countries)
   }
 
