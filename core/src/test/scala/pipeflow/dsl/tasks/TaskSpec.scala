@@ -8,6 +8,7 @@ import pipeflow.dsl.requirements.{DataRefRequirement, TaskRequirement}
 import pipeflow.dsl.requirements.TaskRequirement._
 import pipeflow.dsl.tasks.TaskSpec.DummyAction
 
+
 class TaskSpec extends FlatSpec with Matchers {
 
   "A Task" should "build with id" in {

@@ -44,10 +44,4 @@ class GroupSpec extends FlatSpec with Matchers {
     val parent = Group("parent").withTasks(children)
     parent.children shouldBe children
   }
-
-  it should "build with tasks" in {
-    val children = Seq(Group("child1"), Task("child2"))
-    val parent = Group("parent").withNodes(children)
-    parent.children shouldBe children
-  }
 }
