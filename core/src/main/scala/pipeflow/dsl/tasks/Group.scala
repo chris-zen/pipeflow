@@ -1,4 +1,4 @@
-package pipeflow.dsl.nodes
+package pipeflow.dsl.tasks
 
 import pipeflow.dsl.requirements.Requirement
 
@@ -10,8 +10,8 @@ case class Group private (
   id: String,
   name: Option[String] = None,
   requirements: Seq[Requirement] = Seq.empty,
-  children: Seq[Node] = Seq.empty
-) extends Node {
+  children: Seq[TaskLike] = Seq.empty
+) extends TaskLike {
 
   def name(name: String): Group = this.copy(name = Some(name))
 
@@ -30,8 +30,6 @@ case class Group private (
   def withGroup(group: Group): Group = this.copy(children = children :+ group)
   def withGroups(groups: Seq[Group]): Group = this.copy(children = children ++ groups)
 
-  def withTask(task: Task): Group = this.copy(children = children :+ task)
-  def withTasks(tasks: Seq[Task]): Group = this.copy(children = children ++ tasks)
-
-  def withNodes(nodes: Seq[Node]): Group = this.copy(children = children ++ nodes)
+  def withTask(task: TaskLike): Group = this.copy(children = children :+ task)
+  def withTasks(tasks: Seq[TaskLike]): Group = this.copy(children = children ++ tasks)
 }

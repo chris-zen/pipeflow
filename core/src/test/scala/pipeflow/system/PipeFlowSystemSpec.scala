@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{TestKit, TestProbe}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.{FlatSpecLike, Matchers}
-import pipeflow.dsl.nodes.Task
+import pipeflow.dsl.tasks.Task
 import pipeflow.system.PipeFlowSystem.ScheduleRepeatingIntervalException
 import pipeflow.system.scheduling.tasks.TaskScheduler.NodeCreated
 

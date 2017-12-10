@@ -7,7 +7,7 @@ import akka.actor.{Actor, ActorRef, PoisonPill, Props}
 import akka.event.LoggingReceive
 import akka.pattern.pipe
 import pipeflow.system.PipeFlowSystem.ScheduleNodeBuilder
-import pipeflow.system.iso8601.{IntervalDuration, RepeatingInterval}
+import pipeflow.iso8601.{IntervalDuration, RepeatingInterval}
 import pipeflow.system.scheduling.tasks.TaskScheduler.NodeCreated
 
 import scala.concurrent.duration.FiniteDuration

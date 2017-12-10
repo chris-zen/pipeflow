@@ -5,8 +5,8 @@ import java.time.{Clock, LocalDateTime}
 import akka.actor.{ActorRef, ActorSystem, Props}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
-import pipeflow.dsl.nodes.Node
-import pipeflow.system.iso8601.RepeatingInterval
+import pipeflow.dsl.tasks.TaskLike
+import pipeflow.iso8601.RepeatingInterval
 import pipeflow.system.scheduling.periodic.PeriodicScheduler
 import pipeflow.system.scheduling.tasks.TaskScheduler
 import pipeflow.system.scheduling.tasks.TaskScheduler.NodeCreated
@@ -23,7 +23,7 @@ private[system] trait ActorMaker {
 }
 
 object PipeFlowSystem {
-  type ScheduleNodeBuilder = (LocalDateTime) => Node
+  type ScheduleNodeBuilder = (LocalDateTime) => TaskLike
 
   private val logger = LoggerFactory.getLogger(PipeFlowSystem.getClass.getName.split("[.$]").last)
 
@@ -60,7 +60,7 @@ class PipeFlowSystem private[system] (val name: String,
     actorOf(PeriodicScheduler.props(taskScheduler, repeatingInterval, nodeBuilder))
   }
 
-  def schedule(node: Node): Unit = {
+  def schedule(node: TaskLike): Unit = {
     taskScheduler ! NodeCreated(node)
   }
 

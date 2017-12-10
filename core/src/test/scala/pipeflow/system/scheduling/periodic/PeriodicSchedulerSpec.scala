@@ -7,8 +7,8 @@ import akka.testkit.{TestActorRef, TestKit, TestProbe}
 import org.mockito.Mockito.{verify, verifyNoMoreInteractions}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import pipeflow.dsl.nodes.{Node, Task}
-import pipeflow.system.iso8601.{IntervalDuration, RepeatingInterval}
+import pipeflow.dsl.tasks.{TaskLike, Task}
+import pipeflow.iso8601.{IntervalDuration, RepeatingInterval}
 import pipeflow.system.scheduling.periodic.PeriodicScheduler.Tick
 import pipeflow.system.scheduling.tasks.TaskScheduler.NodeCreated
 
@@ -147,7 +147,7 @@ trait PeriodicSchedulerActorFixtures extends MockitoSugar {
 
     import ExecutionContext.Implicits.global
 
-    def nodeBuilder(dateTime: LocalDateTime): Node = { Task("task") }
+    def nodeBuilder(dateTime: LocalDateTime): TaskLike = { Task("task") }
 
     val hook = mock[Hook]
 

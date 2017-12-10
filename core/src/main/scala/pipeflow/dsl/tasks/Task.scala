@@ -1,4 +1,4 @@
-package pipeflow.dsl.nodes
+package pipeflow.dsl.tasks
 
 import pipeflow.dsl.actions.Action
 import pipeflow.dsl.datarefs.DataRef
@@ -14,9 +14,9 @@ case class Task private (
   requirements: Seq[Requirement] = Seq.empty,
   outputs: Seq[DataRef] = Seq.empty,
   action: Option[Action] = None
-) extends Node {
+) extends TaskLike {
 
-  def children: Seq[Node] = Seq.empty
+  def children: Seq[TaskLike] = Seq.empty
 
   def name(name: String): Task = this.copy(name = Some(name))
 
