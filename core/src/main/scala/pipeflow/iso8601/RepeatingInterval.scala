@@ -1,4 +1,4 @@
-package pipeflow.system.iso8601
+package pipeflow.iso8601
 
 import java.time._
 
@@ -9,12 +9,14 @@ import cats.syntax.option._
 
 object RepeatingInterval {
 
+  private val OffsetTimeZero = OffsetTime.parse("00:00Z")
+
   protected val DefaultDuration: IntervalDuration = IntervalDuration()
 
   private val Regex = """R([0-9]*)/(.*)/(P.*)""".r
 
 
-  def apply(expression: String): Either[String, RepeatingInterval] = {
+  def apply(expression: String)(implicit clock: Clock): Either[String, RepeatingInterval] = {
     expression match {
       case Regex(recurrencesExpr, startExpr, intervalExpr) =>
         for {
@@ -34,11 +36,13 @@ object RepeatingInterval {
       recExpr.toLong.some.asRight
   }
 
-  private def parseStart(expression: String, startExpr: String): Either[String, Option[OffsetDateTime]] = {
+  private def parseStart(expression: String, startExpr: String)(implicit clock: Clock): Either[String, Option[OffsetDateTime]] = {
     if (startExpr.isEmpty)
       none.asRight
     else
       Either.catchNonFatal(OffsetDateTime.parse(startExpr))
+        .orElse(Either.catchNonFatal(OffsetTime.parse(startExpr).atDate(LocalDate.now(clock))))
+        .orElse(Either.catchNonFatal(LocalDate.parse(startExpr).atTime(OffsetTimeZero)))
         .map(start => start.some)
         .leftMap(cause => s"Wrong format for the start part '$startExpr': ${cause.getMessage}")
   }
@@ -56,4 +60,12 @@ object RepeatingInterval {
 case class RepeatingInterval(
   recurrences: Option[Long] = None,
   start: Option[OffsetDateTime] = None,
-  duration: IntervalDuration = RepeatingInterval.DefaultDuration)
+  duration: IntervalDuration = RepeatingInterval.DefaultDuration) {
+
+  override def toString: String = {
+    val recurrencesStr = recurrences.map(_.toString).getOrElse("")
+    val startStr = start.map(_.toString).getOrElse("")
+    val durationStr = duration.toString
+    s"R$recurrencesStr/$startStr/$durationStr"
+  }
+}

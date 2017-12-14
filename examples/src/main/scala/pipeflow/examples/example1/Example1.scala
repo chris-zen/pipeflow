@@ -1,13 +1,15 @@
 package pipeflow.examples.example1
 
-import java.time.LocalDateTime
+import java.time.{Clock, LocalDateTime}
 import java.time.format.DateTimeFormatter
+import scala.collection.JavaConverters._
 
+import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 import pipeflow.dsl.actions.Closure._
 import pipeflow.dsl.datarefs.Uri._
-import pipeflow.dsl.requirements.NodeRequirement._
-import pipeflow.dsl.nodes.{Group, Node, Task}
+import pipeflow.dsl.requirements.TaskRequirement._
+import pipeflow.dsl.tasks.{Group, TaskLike, Task}
 import pipeflow.system.PipeFlowSystem
 
 
@@ -29,19 +31,33 @@ object Example1 extends App {
 
   private val logger = LoggerFactory.getLogger(this.getClass.getName.split("[.$]").last)
 
-  val Countries = Seq("it", "fr")
+  private implicit val clock: Clock = Clock.systemUTC()
 
-  logger.info("Starting pipeline ...")
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  logger.info("Starting application ...")
+
+  val config = ConfigFactory.parseString(
+    """
+      |countries = ["it", "fr"]
+    """.stripMargin)
+
+  val countries = config.getStringList("countries").asScala
 
   val system = PipeFlowSystem("example1")
 
+  scala.sys.addShutdownHook {
+    logger.info("Process shutdown")
+    system.shutdown()
+  }
+
   system.schedule("R/T00:30Z/PT1H") { dateTime =>
-    buildPreprocessing(dateTime, Countries)
+    buildPreprocessing(dateTime, countries)
   }
 
   system.awaitTermination()
 
-  logger.info("Pipeline finished ...")
+  logger.info("Application finished ...")
 
 
   /**
@@ -90,7 +106,7 @@ object Example1 extends App {
     * @param cleaning the node for cleaning the data this node depends on
     * @return The task node that aggregates the data per user for all the countries on a given date/time
     */
-  private[example1] def buildAggregation(dateTime: LocalDateTime, cleaning: Node): Task = {
+  private[example1] def buildAggregation(dateTime: LocalDateTime, cleaning: TaskLike): Task = {
     Task(s"aggregation-${dateTime.asId}")
       .name("Per user aggregation for all the countries")
       .input(s"s3://data/user-info/${dateTime.asDailyPath}")

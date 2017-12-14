@@ -1,46 +1,67 @@
 package pipeflow.system
 
-import java.time.LocalDateTime
+import java.time.{Clock, LocalDateTime}
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem, Props}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
-import pipeflow.dsl.nodes.Node
-import pipeflow.system.iso8601.RepeatingInterval
+import pipeflow.dsl.tasks.TaskLike
+import pipeflow.iso8601.RepeatingInterval
+import pipeflow.system.scheduling.periodic.PeriodicScheduler
+import pipeflow.system.scheduling.tasks.TaskScheduler
+import pipeflow.system.scheduling.tasks.TaskScheduler.NodeCreated
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
 
+
+private[system] trait ActorMaker {
+
+  protected def system: ActorSystem
+
+  protected def actorOf(props: Props): ActorRef = system.actorOf(props)
+  protected def actorOf(props: Props, name: String): ActorRef = system.actorOf(props, name)
+}
 
 object PipeFlowSystem {
-  type NodeBuilder = (LocalDateTime) => Node
+  type ScheduleNodeBuilder = (LocalDateTime) => TaskLike
 
   private val logger = LoggerFactory.getLogger(PipeFlowSystem.getClass.getName.split("[.$]").last)
 
-  private class ScheduleRepeatingIntervalException(msg: String) extends Exception(msg)
+  private[system] object ActorNames {
+    val TaskScheduler = "task-scheduler"
+  }
 
-  def apply(name: String): PipeFlowSystem = new PipeFlowSystem(name, ConfigFactory.load())
+  class ScheduleRepeatingIntervalException(msg: String) extends Exception(msg)
+
+  def apply(name: String)(implicit clock: Clock, executionContext: ExecutionContext): PipeFlowSystem = {
+    val config = ConfigFactory.load()
+    val system = ActorSystem(name, config)
+    new PipeFlowSystem(name, config, system)
+  }
 }
 
-class PipeFlowSystem(val name: String, val config: Config) {
+class PipeFlowSystem private[system] (val name: String,
+                                      val config: Config,
+                                      protected val system: ActorSystem)(
+                                      implicit clock: Clock, executionContext: ExecutionContext) extends ActorMaker {
 
-  import PipeFlowSystem.{logger, NodeBuilder, ScheduleRepeatingIntervalException}
+  import PipeFlowSystem.{ScheduleNodeBuilder, ScheduleRepeatingIntervalException, logger, ActorNames}
 
-  val system = ActorSystem(name, config)
+  private val taskScheduler = actorOf(TaskScheduler.props(), ActorNames.TaskScheduler)
 
-  def schedule(iso8601RepeatingInterval: String)(nodeBuilder: NodeBuilder): Unit = {
+  def schedule(iso8601RepeatingInterval: String)(nodeBuilder: ScheduleNodeBuilder): Unit = {
     RepeatingInterval(iso8601RepeatingInterval) match {
       case Right(repeatingInterval) => schedule(repeatingInterval)(nodeBuilder)
       case Left(msg) => throw new ScheduleRepeatingIntervalException(msg)
     }
   }
 
-  def schedule(repeatingInterval: RepeatingInterval)(nodeBuilder: NodeBuilder): Unit = {
-    // TODO Create an scheduling actor
+  def schedule(repeatingInterval: RepeatingInterval)(nodeBuilder: ScheduleNodeBuilder): Unit = {
+    actorOf(PeriodicScheduler.props(taskScheduler, repeatingInterval, nodeBuilder))
   }
 
-  def run(node: Node): Unit = {
-    // TODO Materialize the node graph into actors
+  def schedule(node: TaskLike): Unit = {
+    taskScheduler ! NodeCreated(node)
   }
 
   def awaitTermination(): Unit = {
